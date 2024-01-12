@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMI Result</title>
+</head>
+<body>
+    <h1>Your BMI:</h1>
+    <p>{{ bmi }}</p>
+
+    {% if bmi < 18.5 %}
+        <p style="color: red;">You are underweight. Consider gaining some weight.</p>
+    {% elif bmi >= 18.5 and bmi < 24.9 %}
+        <p style="color: green;">Your weight is normal. Keep it up!</p>
+    {% elif bmi >= 25 and bmi < 29.9 %}
+        <p style="color: orange;">You are overweight. Consider losing some weight.</p>
+    {% else %}
+        <p style="color: red;">You are obese. Consider losing weight for better health.</p>
+    {% endif %}
+</body>
+</html>
