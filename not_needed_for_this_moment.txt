@@ -1,0 +1,41 @@
+Meal repository with CRUD operations for meal entity. Mybe someine will need this.
+
+
+
+
+class MealRepository:
+    @staticmethod
+    def create_meal(tutorial, kcal, difficulty_level, health_level):
+        meal = Meal(tutorial=tutorial, kcal=kcal, difficulty_level=difficulty_level, health_level=health_level)
+        db.session.add(meal)
+        db.session.commit()
+        return meal
+
+    @staticmethod
+    def get_meals():
+        return Meal.query.all()
+
+    @staticmethod
+    def get_meal_by_id(meal_id):
+        return Meal.query.get(meal_id)
+
+    @staticmethod
+    def update_meal(meal_id, tutorial, kcal, difficulty_level, health_level):
+        meal = Meal.query.get(meal_id)
+        if meal:
+            meal.tutorial = tutorial
+            meal.kcal = kcal
+            meal.difficulty_level = difficulty_level
+            meal.health_level = health_level
+            db.session.commit()
+            return meal
+        return None
+
+    @staticmethod
+    def delete_meal(meal_id):
+        meal = Meal.query.get(meal_id)
+        if meal:
+            db.session.delete(meal)
+            db.session.commit()
+            return meal
+        return None

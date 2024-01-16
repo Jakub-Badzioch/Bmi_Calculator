@@ -1,10 +1,9 @@
 import io
 import random
+from enum import Enum
 
 from flask import Flask, request, make_response, render_template
 from flask_sqlalchemy import SQLAlchemy
-from enum import Enum
-
 from reportlab.pdfgen import canvas
 
 app = Flask(__name__)
@@ -25,6 +24,9 @@ class HealthLevel(Enum):
 
 
 class Meal(db.Model):
+    """
+    Database model/entity for representing meal information.
+    """
     id = db.Column(db.Integer, primary_key=True)
     tutorial = db.Column(db.Text, nullable=False)
     kcal = db.Column(db.Float, nullable=False)
@@ -32,60 +34,41 @@ class Meal(db.Model):
     health_level = db.Column(db.Enum(HealthLevel), nullable=False)
 
 
-class MealRepository:
-    @staticmethod
-    def create_meal(tutorial, kcal, difficulty_level, health_level):
-        meal = Meal(tutorial=tutorial, kcal=kcal, difficulty_level=difficulty_level, health_level=health_level)
-        db.session.add(meal)
-        db.session.commit()
-        return meal
+def get_meal_by_filter_criteria(min_kcal, max_kcal, difficulty_level, health_level):
+    """
+        Retrieves a meal based on filter criteria.
 
-    @staticmethod
-    def get_meals():
-        return Meal.query.all()
+        Args:
+            min_kcal (float): Minimum kcal value.
+            max_kcal (float): Maximum kcal value.
+            difficulty_level (DifficultyLevel): Difficulty level of the meal.
+            health_level (HealthLevel): Health level of the meal.
 
-    @staticmethod
-    def get_meal_by_id(meal_id):
-        return Meal.query.get(meal_id)
+        Returns:
+            Meal: A random meal that matches the criteria, or None if no suitable meal is found.
+    """
+    meals = Meal.query.filter(
+        Meal.kcal.between(min_kcal, max_kcal),
+        Meal.difficulty_level == difficulty_level,
+        Meal.health_level == health_level
+    ).all()
 
-    @staticmethod
-    def update_meal(meal_id, tutorial, kcal, difficulty_level, health_level):
-        meal = Meal.query.get(meal_id)
-        if meal:
-            meal.tutorial = tutorial
-            meal.kcal = kcal
-            meal.difficulty_level = difficulty_level
-            meal.health_level = health_level
-            db.session.commit()
-            return meal
+    if meals:
+        return random.choice(meals)
+    else:
         return None
-
-    @staticmethod
-    def delete_meal(meal_id):
-        meal = Meal.query.get(meal_id)
-        if meal:
-            db.session.delete(meal)
-            db.session.commit()
-            return meal
-        return None
-
-
-class MealService:
-    @staticmethod
-    def get_suitable_meal_range(min_kcal, max_kcal, difficulty_level, health_level):
-        meals = Meal.query.filter(
-            Meal.kcal.between(min_kcal, max_kcal),
-            Meal.difficulty_level == difficulty_level,
-            Meal.health_level == health_level
-        ).all()
-
-        if meals:
-            return random.choice(meals)
-        else:
-            return None
 
 
 def generate_pdf(meal):
+    """
+        Generates a PDF document for the given meal.
+
+        Args:
+            meal (Meal): The meal for which the PDF is generated.
+
+        Returns:
+            bytes: The generated PDF content.
+    """
     buffer = io.BytesIO()
 
     # Create a PDF document
@@ -106,67 +89,80 @@ def generate_pdf(meal):
     return buffer.read()
 
 
-class BmiService:
-    @staticmethod
-    def calculate_bmi(weight, height):
-        height_in_meters = height / 100
-        bmi = weight / (height_in_meters ** 2)
-        return bmi
+@app.route('/bmi/calculate/', methods=['GET', 'POST'])
+def calculate_bmi():
+    """
+        Calculates BMI based on user input.
+
+        Returns:
+            str: Rendered HTML template with the BMI result.
+    """
+    if request.method == 'POST':
+        weight = float(request.form['weight'])
+        height = float(request.form['height'])
+
+        bmi = weight / (height / 100 ** 2)
+
+        return render_template('result_bmi.html', bmi=bmi)
+
+    return render_template('calculate_bmi.html')
 
 
-class BmiController:
-    @staticmethod
-    @app.route('/bmi/calculate/', methods=['GET', 'POST'])
-    def calculate_bmi():
-        if request.method == 'POST':
-            weight = float(request.form['weight'])
-            height = float(request.form['height'])
+@app.route('/get_suitable_meal/', methods=['GET', 'POST'])
+def get_suitable_meal():
+    """
+        Retrieves a suitable meal based on user input criteria.
 
-            bmi = BmiService.calculate_bmi(weight, height)
+        Returns:
+            Either a rendered HTML template or a PDF response.
+    """
+    if request.method == 'POST':
+        min_kcal = float(request.form['min_kcal'])
+        max_kcal = float(request.form['max_kcal'])
+        difficulty_level = request.form['difficulty_level']
+        health_level = request.form['health_level']
 
-            return render_template('result_bmi.html', bmi=bmi)
+        meal = get_meal_by_filter_criteria(min_kcal, max_kcal, difficulty_level, health_level)
 
-        return render_template('calculate_bmi.html')
+        if meal:
+            response = make_response(generate_pdf(meal))
+            response.headers['Content-Type'] = 'application/pdf'
+            response.headers['Content-Disposition'] = 'inline; filename=suitable_meal.pdf'
+            return response
+        else:
+            return "No suitable meal found."
 
-
-class MealController:
-    @staticmethod
-    @app.route('/get_suitable_meal/', methods=['GET', 'POST'])
-    def get_suitable_meal():
-        if request.method == 'POST':
-            min_kcal = float(request.form['min_kcal'])
-            max_kcal = float(request.form['max_kcal'])
-            difficulty_level = request.form['difficulty_level']
-            health_level = request.form['health_level']
-
-            meal = MealService.get_suitable_meal_range(min_kcal, max_kcal, difficulty_level, health_level)
-
-            if meal:
-                response = make_response(generate_pdf(meal))
-                response.headers['Content-Type'] = 'application/pdf'
-                response.headers['Content-Disposition'] = 'inline; filename=suitable_meal.pdf'
-                return response
-            else:
-                return "No suitable meal found."
-
-        return render_template('input_criteria.html')
-
-    @app.route('/populate_db')
-    def populate_db(self):
-        with app.app_context():
-            new_meal = Meal(
-                tutorial='Chicken Alfredo',
-                kcal=800.0,
-                difficulty_level=DifficultyLevel.MEDIUM,
-                health_level=HealthLevel.MEDIUM
-            )
-            db.session.add(new_meal)
-            db.session.commit()
-
-        return "Record created successfully!"
+    return render_template('input_criteria.html')
 
 
-# Create tables before running the app
+@app.route('/populate_db')
+def populate_db():
+    """
+    Populates the database with 1 meal record.
+
+    Returns:
+        str: Confirmation message.
+    """
+    # todo zapelnij baze mati
+
+    tutorial_data = "sth"
+    kcal_data = 3000
+    difficulty_level_data = DifficultyLevel.MEDIUM
+    health_level_data = HealthLevel.MEDIUM
+
+    new_meal = Meal(
+        tutorial=tutorial_data,
+        kcal=kcal_data,
+        difficulty_level=difficulty_level_data,
+        health_level=health_level_data
+    )
+
+    db.session.add(new_meal)
+    db.session.commit()
+
+    return "Record created successfully!"
+
+
 with app.app_context():
     db.create_all()
 
