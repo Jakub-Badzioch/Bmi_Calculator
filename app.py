@@ -170,6 +170,8 @@ def populate_db():
         meal_type=meal_type_test
     )
 
+    #Meal Type - Supper
+
     ThaiShrimpSoup = Meal(
         tutorial='https://www.eatthismuch.com/recipe/nutrition/easy-thai-shrimp-soup,906963/',
         kcal=466,
@@ -177,41 +179,115 @@ def populate_db():
         health_level=HealthLevel.HEALTHY,
         meal_type=MealType.SUPPER
     )
-    #
-    # WhiteSphagetti = Meal(
-    #     tutorial='https://www.eatthismuch.com/recipe/nutrition/white-spaghetti,920498/',
-    #     kcal=536,
-    #     difficulty_level=DifficultyLevel.EASY,
-    #     health_level=HealthLevel.UNHEALTHY,
-    #     meal_type=MealType.DINNER
-    # )
-    #
-    # ProteinWaffles = Meal(
-    #     tutorial='https://www.eatthismuch.com/recipe/nutrition/clean-eating-protein-pancakes,925225/',
-    #     kcal=79,
-    #     difficulty_level=DifficultyLevel.EASY,
-    #     health_level=HealthLevel.MEDIUM,
-    #     meal_type=MealType.BREAKFAST
-    # )
-    #
-    # WhiteSphagetti = Meal(
-    #     tutorial='https://www.eatthismuch.com/recipe/nutrition/white-spaghetti,920498/',
-    #     kcal=536,
-    #     difficulty_level=DifficultyLevel.EASY,
-    #     health_level=HealthLevel.UNHEALTHY,
-    #     meal_type=MealType.DINNER
-    # )
-    #
-    # WhiteSphagetti = Meal(
-    #     tutorial='https://www.eatthismuch.com/recipe/nutrition/white-spaghetti,920498/',
-    #     kcal=536,
-    #     difficulty_level=DifficultyLevel.EASY,
-    #     health_level=HealthLevel.UNHEALTHY,
-    #     meal_type=MealType.DINNER
-    # )
 
-    db.session.add(new_meal)
+    SalmonSalad = Meal(
+        tutorial='https://www.eatthismuch.com/recipe/nutrition/salmon-salad,949284/',
+        kcal=568,
+        difficulty_level=DifficultyLevel.EASY,
+        health_level=HealthLevel.HEALTHY,
+        meal_type=MealType.SUPPER
+    )
+
+    AppleSliceSandwich = Meal(
+        tutorial='https://www.eatthismuch.com/recipe/nutrition/apple-slice-sandwich,921836/',
+        kcal=442,
+        difficulty_level=DifficultyLevel.EASY,
+        health_level=HealthLevel.MEDIUM,
+        meal_type=MealType.SUPPER
+    )
+
+    ClassicBLT = Meal(
+        tutorial='https://www.eatthismuch.com/recipe/nutrition/classic-blt,905829//',
+        kcal=914,
+        difficulty_level=DifficultyLevel.EASY,
+        health_level=HealthLevel.MEDIUM,
+        meal_type=MealType.SUPPER
+    )
+
+
+
+
+    #Meal Type - Breakfast
+
+    CranberryBananaOatmeal = Meal(
+        tutorial='https://www.eatthismuch.com/recipe/nutrition/cranberry-banana-oatmeal,906966/',
+        kcal=355,
+        difficulty_level=DifficultyLevel.EASY,
+        health_level=HealthLevel.HEALTHY,
+        meal_type=MealType.BREAKFAST
+    )
+
+    AlmondButterSmoothie = Meal(
+        tutorial='https://www.eatthismuch.com/recipe/nutrition/almond-butter-smoothie,939598/',
+        kcal=460,
+        difficulty_level=DifficultyLevel.MEDIUM,
+        health_level=HealthLevel.HEALTHY,
+        meal_type=MealType.BREAKFAST
+    )
+
+    BaconAndCheddarGrilledCheese = Meal(
+        tutorial='https://www.eatthismuch.com/recipe/nutrition/bacon-and-cheddar-grilled-cheese,927340/',
+        kcal=411,
+        difficulty_level=DifficultyLevel.EASY,
+        health_level=HealthLevel.UNHEALTHY,
+        meal_type=MealType.BREAKFAST
+    )
+
+    PestoPastaWithGrilledChicken = Meal(
+        tutorial='https://www.eatthismuch.com/recipe/nutrition/pesto-pasta-with-grilled-chicken,3218180/',
+        kcal=852,
+        difficulty_level=DifficultyLevel.MEDIUM,
+        health_level=HealthLevel.MEDIUM,
+        meal_type=MealType.BREAKFAST
+    )
+
+
+    #Meal Type - Dinner
+
+    GarlicMacNCheese = Meal(
+        tutorial='https://www.eatthismuch.com/recipe/nutrition/garlic-mac-n-cheese,925249/',
+        kcal=587,
+        difficulty_level=DifficultyLevel.MEDIUM,
+        health_level=HealthLevel.UNHEALTHY,
+        meal_type=MealType.DINNER
+    )
+
+    WhiteSphagetti = Meal(
+        tutorial='https://www.eatthismuch.com/recipe/nutrition/white-spaghetti,920498/',
+        kcal=587,
+        difficulty_level=DifficultyLevel.MEDIUM,
+        health_level=HealthLevel.MEDIUM,
+        meal_type=MealType.DINNER
+    )
+
+    BakedParmesanChickenNuggets = Meal(
+        tutorial='https://www.eatthismuch.com/recipe/nutrition/baked-parmesan-chicken-nuggets,3222233/',
+        kcal=1732,
+        difficulty_level=DifficultyLevel.MEDIUM,
+        health_level=HealthLevel.MEDIUM,
+        meal_type=MealType.DINNER
+    )
+
+    MediTerraneanQuinoaSalad = Meal(
+        tutorial='https://www.eatthismuch.com/recipe/nutrition/mediterranean-quinoa-salad,34389/',
+        kcal=532,
+        difficulty_level=DifficultyLevel.MEDIUM,
+        health_level=HealthLevel.HEALTHY,
+        meal_type=MealType.DINNER
+    )
+
     db.session.add(ThaiShrimpSoup)
+    db.session.add(CranberryBananaOatmeal)
+    db.session.add(WhiteSphagetti)
+    db.session.add(ClassicBLT)
+    db.session.add(SalmonSalad)
+    db.session.add(AppleSliceSandwich)
+    db.session.add(BakedParmesanChickenNuggets)
+    db.session.add(PestoPastaWithGrilledChicken)
+    db.session.add(GarlicMacNCheese)
+    db.session.add(AlmondButterSmoothie)
+    db.session.add(BaconAndCheddarGrilledCheese)
+    db.session.add(MediTerraneanQuinoaSalad)
     db.session.commit()
 
     return "Record created successfully!"
