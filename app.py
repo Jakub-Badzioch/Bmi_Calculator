@@ -2,7 +2,7 @@ import io
 import random
 from enum import Enum
 
-from flask import Flask, request, make_response, render_template
+from flask import Flask, request, make_response, render_template, url_for
 from flask_sqlalchemy import SQLAlchemy
 from reportlab.pdfgen import canvas
 

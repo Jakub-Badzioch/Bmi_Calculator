@@ -1,11 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% extends 'base.html' %}
+
+{% block head %}
     <title>BMI Calculator</title>
-</head>
-<body>
+{% endblock %}
+{% block body %}
     <h1>BMI Calculator</h1>
     <form method="post" action="/bmi/calculate/">
         <label for="weight">Weight (kg):</label>
@@ -16,5 +14,5 @@
 
         <button type="submit">Calculate BMI</button>
     </form>
-</body>
-</html>
+{% endblock %}
+
