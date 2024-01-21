@@ -23,6 +23,12 @@ class HealthLevel(Enum):
     HEALTHY = 'Healthy'
 
 
+class MealType(Enum):
+    BREAKFAST = 'Breakfast'
+    DINNER = 'Dinner'
+    SUPPER = 'Supper'
+
+
 class Meal(db.Model):
     """
     Database model/entity for representing meal information.
@@ -32,9 +38,11 @@ class Meal(db.Model):
     kcal = db.Column(db.Float, nullable=False)
     difficulty_level = db.Column(db.Enum(DifficultyLevel), nullable=False)
     health_level = db.Column(db.Enum(HealthLevel), nullable=False)
+    meal_type = db.Column(db.Enum(MealType), nullable=False)
 
 
-def get_meal_by_filter_criteria(min_kcal, max_kcal, difficulty_level, health_level):
+
+def get_meal_by_filter_criteria(min_kcal, max_kcal, difficulty_level, health_level, meal_type):
     """
         Retrieves a meal based on filter criteria.
 
@@ -50,7 +58,8 @@ def get_meal_by_filter_criteria(min_kcal, max_kcal, difficulty_level, health_lev
     meals = Meal.query.filter(
         Meal.kcal.between(min_kcal, max_kcal),
         Meal.difficulty_level == difficulty_level,
-        Meal.health_level == health_level
+        Meal.health_level == health_level,
+        Meal.meal_type == meal_type
     ).all()
 
     if meals:
@@ -79,6 +88,7 @@ def generate_pdf(meal):
     pdf.drawString(100, 730, f"Kcal: {meal.kcal}")
     pdf.drawString(100, 710, f"Difficulty: {meal.difficulty_level}")
     pdf.drawString(100, 690, f"Health: {meal.health_level}")
+    # pdf.drawString(100, 670, f"Health: {meal.meal_type}")
 
     # Save the PDF to the buffer
     pdf.showPage()
@@ -121,8 +131,9 @@ def get_suitable_meal():
         max_kcal = float(request.form['max_kcal'])
         difficulty_level = request.form['difficulty_level']
         health_level = request.form['health_level']
+        meal_type = request.form['meal_type']
 
-        meal = get_meal_by_filter_criteria(min_kcal, max_kcal, difficulty_level, health_level)
+        meal = get_meal_by_filter_criteria(min_kcal, max_kcal, difficulty_level, health_level, meal_type)
 
         if meal:
             response = make_response(generate_pdf(meal))
@@ -145,26 +156,71 @@ def populate_db():
     """
     # todo zapelnij baze mati
 
-    tutorial_data = "sth"
-    kcal_data = 3000
-    difficulty_level_data = DifficultyLevel.MEDIUM
+    tutorial_data = "sdasath"
+    kcal_data = 3111
+    difficulty_level_data = DifficultyLevel.EASY
     health_level_data = HealthLevel.MEDIUM
+    meal_type_test = MealType.SUPPER
 
     new_meal = Meal(
         tutorial=tutorial_data,
         kcal=kcal_data,
         difficulty_level=difficulty_level_data,
-        health_level=health_level_data
+        health_level=health_level_data,
+        meal_type=meal_type_test
     )
 
+    ThaiShrimpSoup = Meal(
+        tutorial='https://www.eatthismuch.com/recipe/nutrition/easy-thai-shrimp-soup,906963/',
+        kcal=466,
+        difficulty_level=DifficultyLevel.MEDIUM,
+        health_level=HealthLevel.HEALTHY,
+        meal_type=MealType.SUPPER
+    )
+    #
+    # WhiteSphagetti = Meal(
+    #     tutorial='https://www.eatthismuch.com/recipe/nutrition/white-spaghetti,920498/',
+    #     kcal=536,
+    #     difficulty_level=DifficultyLevel.EASY,
+    #     health_level=HealthLevel.UNHEALTHY,
+    #     meal_type=MealType.DINNER
+    # )
+    #
+    # ProteinWaffles = Meal(
+    #     tutorial='https://www.eatthismuch.com/recipe/nutrition/clean-eating-protein-pancakes,925225/',
+    #     kcal=79,
+    #     difficulty_level=DifficultyLevel.EASY,
+    #     health_level=HealthLevel.MEDIUM,
+    #     meal_type=MealType.BREAKFAST
+    # )
+    #
+    # WhiteSphagetti = Meal(
+    #     tutorial='https://www.eatthismuch.com/recipe/nutrition/white-spaghetti,920498/',
+    #     kcal=536,
+    #     difficulty_level=DifficultyLevel.EASY,
+    #     health_level=HealthLevel.UNHEALTHY,
+    #     meal_type=MealType.DINNER
+    # )
+    #
+    # WhiteSphagetti = Meal(
+    #     tutorial='https://www.eatthismuch.com/recipe/nutrition/white-spaghetti,920498/',
+    #     kcal=536,
+    #     difficulty_level=DifficultyLevel.EASY,
+    #     health_level=HealthLevel.UNHEALTHY,
+    #     meal_type=MealType.DINNER
+    # )
+
     db.session.add(new_meal)
+    db.session.add(ThaiShrimpSoup)
     db.session.commit()
 
     return "Record created successfully!"
 
+# populate_db()
 
 with app.app_context():
     db.create_all()
+
 
 if __name__ == '__main__':
     app.run(debug=True)
