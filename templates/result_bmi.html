@@ -1,22 +1,81 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BMI Result</title>j
-</head>
-<body>
-    <h1>Your BMI:</h1>
-    <p>{{ bmi }}</p>
+{% extends 'base.html' %}
 
-    {% if bmi < 18.5 %}
-        <p style="color: red;">You are underweight. Consider gaining some weight.</p>
-    {% elif bmi >= 18.5 and bmi < 24.9 %}
-        <p style="color: green;">Your weight is normal. Keep it up!</p>
-    {% elif bmi >= 25 and bmi < 29.9 %}
-        <p style="color: orange;">You are overweight. Consider losing some weight.</p>
-    {% else %}
-        <p style="color: red;">You are obese. Consider losing weight for better health.</p>
-    {% endif %}
-</body>
-</html>
+{% block head %}
+<title>BMI Results</title>
+{% endblock %}
+
+{% block body %}
+<div class="container">
+    <div class="result" style="width: 750px">
+        <h2 class="nice-headline">YOUR STATS</h2>
+        <div class="row bordered">
+            {% if user_data %}
+            <div class="col-stats" style="margin-left: 5%">
+                <p>Gender: {{ get_gender_label(user_data.gender) }}</p>
+                <p>Age: {{ user_data.age }}</p>
+            </div>
+            <div class="col-stats">
+                <p>Height: {{ user_data.height }} cm</p>
+                <p>Weight: {{ user_data.weight }} kg</p>
+            </div>
+            <div class="col-stats">
+                <p>Activity: {{ get_activity_label(user_data.activity) }}</p>
+                {% if user_data.bfat %}
+                <p>Body Fat Percentage: {{ user_data.bfat }} %</p>
+                {% endif %}
+            </div>
+            {% else %}
+            <p>No user data found.</p>
+            {% endif %}
+        </div>
+        <div class="row maintenance">
+            <div class="maintenance-col">
+                <p style="font-weight: bold; text-align: center">Your Maintenance Calories</p>
+                <div id="cals">
+                    {% if user_data.bfat %}
+                    <div style="padding-top: 25px;">
+                            <span class="span_h2">{{ calculate_calories_bfat(user_data.weight, user_data.bfat, user_data.activity) }}</span>
+                            <br>
+                            <span class="span-cals">calories per day</span>
+                        </div>
+                        <hr>
+                        <div>
+                            <span class="span_h2">{{ calculate_calories_bfat(user_data.weight, user_data.bfat, user_data.activity)*7 }}</span>
+                            <br>
+                            <span class="span-cals">calories per week</span>
+                        </div>
+                    {% else %}
+                    <div style="padding-top: 25px;">
+                            <span class="span_h2">{{ calculate_calories(user_data.weight, user_data.height, user_data.age, user_data.gender, user_data.activity) }}</span>
+                            <br>
+                            <span class="span-cals">calories per day</span>
+                        </div>
+                        <hr>
+                        <div>
+                            <span class="span_h2">{{ calculate_calories(user_data.weight, user_data.height, user_data.age, user_data.gender, user_data.activity)*7 }}</span>
+                            <br>
+                            <span class="span-cals">calories per week</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="maintenance-col bordered" style="width: 66%">
+                <p>Your BMI score is <strong>{{ calculate_bmi(user_data.weight, user_data.height) }}</strong> which classifies you as <strong>{{ classify_bmi(calculate_bmi(user_data.weight, user_data.height)) }}</strong></p>
+                {% if user_data.bfat %}
+                The best estimate for your maintenance calories is <strong>{{ calculate_calories_bfat(user_data.weight, user_data.bfat, user_data.activity) }}</strong> calories per day based on the Katch-McArdle Formula, which is widely known to be the most accurate when body fat is provided.
+                {% else %}
+                <p>Providing your <strong>Body Fat</strong> allows a more accurate formula to estimate your Maintenance Calories</p>
+                {% endif %}
+            </div>
+            <div class="maintenance-col bordered" style="width: 66%">
+                <h3>Maximum Muscular Potential</h3>
+                <p>According to Martin Berkhan's formula, your maximum muscular potential is <strong>{{ user_data.height-100 }} kg</strong> at 5% body fat. Most people have no desire to be 5% body fat, so you'd be <strong>{{ user_data.height-95 }} kg</strong> at 10% body fat & <strong>{{ user_data.height-90 }} kg</strong> at 15% body fat.</p>
+            </div>
+        </div>
+
+
+
+    </div>
+</div>
+{% endblock %}

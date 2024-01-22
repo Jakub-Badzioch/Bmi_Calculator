@@ -1,302 +1,217 @@
-import io
-import random
 from enum import Enum
-
-from flask import Flask, request, make_response, render_template, url_for
+from flask import Flask, render_template, url_for, request, redirect
 from flask_sqlalchemy import SQLAlchemy
-from reportlab.pdfgen import canvas
+import math
+import random
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates', static_folder='static')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 db = SQLAlchemy(app)
 
-
-class DifficultyLevel(Enum):
-    EASY = 'Easy'
-    MEDIUM = 'Medium'
-    HARD = 'Hard'
-
-
-class HealthLevel(Enum):
-    UNHEALTHY = 'Unhealthy'
-    MEDIUM = 'Medium'
-    HEALTHY = 'Healthy'
-
-
 class MealType(Enum):
-    BREAKFAST = 'Breakfast'
-    DINNER = 'Dinner'
-    SUPPER = 'Supper'
+    BREAKFAST = 'BREAKFAST'
+    DINNER = 'DINNER'
+    SUPPER = 'SUPPER'
 
-
-class Meal(db.Model):
-    """
-    Database model/entity for representing meal information.
-    """
-    id = db.Column(db.Integer, primary_key=True)
-    tutorial = db.Column(db.Text, nullable=False)
-    kcal = db.Column(db.Float, nullable=False)
-    difficulty_level = db.Column(db.Enum(DifficultyLevel), nullable=False)
-    health_level = db.Column(db.Enum(HealthLevel), nullable=False)
-    meal_type = db.Column(db.Enum(MealType), nullable=False)
-
-
-
-def get_meal_by_filter_criteria(min_kcal, max_kcal, difficulty_level, health_level, meal_type):
-    """
-        Retrieves a meal based on filter criteria.
-
-        Args:
-            min_kcal (float): Minimum kcal value.
-            max_kcal (float): Maximum kcal value.
-            difficulty_level (DifficultyLevel): Difficulty level of the meal.
-            health_level (HealthLevel): Health level of the meal.
-
-        Returns:
-            Meal: A random meal that matches the criteria, or None if no suitable meal is found.
-    """
-    meals = Meal.query.filter(
-        Meal.kcal.between(min_kcal, max_kcal),
-        Meal.difficulty_level == difficulty_level,
-        Meal.health_level == health_level,
-        Meal.meal_type == meal_type
-    ).all()
-
-    if meals:
-        return random.choice(meals)
-    else:
-        return None
-
-
-def generate_pdf(meal):
-    """
-        Generates a PDF document for the given meal.
-
-        Args:
-            meal (Meal): The meal for which the PDF is generated.
-
-        Returns:
-            bytes: The generated PDF content.
-    """
-    buffer = io.BytesIO()
-
-    # Create a PDF document
-    pdf = canvas.Canvas(buffer)
-
-    # Write content to the PDF
-    pdf.drawString(100, 750, f"Suitable Meal: {meal.tutorial}")
-    pdf.drawString(100, 730, f"Kcal: {meal.kcal}")
-    pdf.drawString(100, 710, f"Difficulty: {meal.difficulty_level}")
-    pdf.drawString(100, 690, f"Health: {meal.health_level}")
-    # pdf.drawString(100, 670, f"Health: {meal.meal_type}")
-
-    # Save the PDF to the buffer
-    pdf.showPage()
-    pdf.save()
-
-    # Move the buffer cursor to the beginning
-    buffer.seek(0)
-    return buffer.read()
-
-
-@app.route('/bmi/calculate/', methods=['GET', 'POST'])
-def calculate_bmi():
-    """
-        Calculates BMI based on user input.
-
-        Returns:
-            str: Rendered HTML template with the BMI result.
-    """
+@app.route("/", methods=['POST', 'GET'])
+def index():
+    clear_user_data()  # Clear the table before rendering the index.html page for the current user
     if request.method == 'POST':
+
+#         print(request.form)
+        gender = request.form['gender']
+        age = request.form['age']
         weight = float(request.form['weight'])
         height = float(request.form['height'])
+        activity = request.form['activity']
+        bfat = float(request.form['bodyfat']) if request.form['bodyfat'] else None
 
-        bmi = weight / (height / 100 ** 2)
+        # Creating a new INSERT to the user_data table in the site.db
+        new_row = User_data(
+            gender=gender,
+            age=age,
+            weight=weight,
+            height=height,
+            activity=activity,
+            bfat=bfat
+        )
 
-        return render_template('result_bmi.html', bmi=bmi)
+        try:
+            db.session.add(new_row)
+            db.session.commit()
+            return redirect(url_for('result_bmi'))
 
-    return render_template('calculate_bmi.html')
+        except Exception as e:
+            print(f"Error: {e}")
+            return 'There was an issue with calculating.'
+    else:
 
+        return render_template('index.html')
 
-@app.route('/get_suitable_meal/', methods=['GET', 'POST'])
-def get_suitable_meal():
-    """
-        Retrieves a suitable meal based on user input criteria.
+@app.route('/result_bmi')
+def result_bmi():
+    try:
+        # fetching data from the db about the current user
+        user_data = User_data.query.order_by(User_data.id.desc()).first()
+#         print("Retrieved User Data:", user_data)
+    except Exception as e:
+        print("Error fetching data:", e)
 
-        Returns:
-            Either a rendered HTML template or a PDF response.
-    """
+    return render_template(
+            'result_bmi.html',
+            user_data=user_data,
+            calculate_bmi=calculate_bmi,
+            classify_bmi=classify_bmi,
+            get_gender_label=get_gender_label,
+            get_activity_label=get_activity_label,
+            calculate_calories=calculate_calories,
+            calculate_calories_bfat=calculate_calories_bfat
+        )
+
+@app.route("/meals", methods=['GET', 'POST'])
+def meals_route():
+    selected_meals = None
+
     if request.method == 'POST':
-        min_kcal = float(request.form['min_kcal'])
         max_kcal = float(request.form['max_kcal'])
-        difficulty_level = request.form['difficulty_level']
-        health_level = request.form['health_level']
-        meal_type = request.form['meal_type']
+        selected_meals = get_meals_by_criteria(max_kcal)
+        return render_template(
+                'meals.html',
+                selected_meals = selected_meals,
+            )
 
-        meal = get_meal_by_filter_criteria(min_kcal, max_kcal, difficulty_level, health_level, meal_type)
-
-        if meal:
-            response = make_response(generate_pdf(meal))
-            response.headers['Content-Type'] = 'application/pdf'
-            response.headers['Content-Disposition'] = 'inline; filename=suitable_meal.pdf'
-            return response
-        else:
-            return "No suitable meal found."
-
-    return render_template('input_criteria.html')
+    return render_template('meals.html')
 
 
-@app.route('/populate_db')
-def populate_db():
-    """
-    Populates the database with 1 meal record.
+def clear_user_data():
+# Delete all records from the User_data table
+    with app.app_context():
+        db.session.query(User_data).delete()
+        db.session.commit()
 
-    Returns:
-        str: Confirmation message.
-    """
-    # todo zapelnij baze mati
+def get_gender_label(gender):
+    # Define a mapping between integer values and labels for gender
+    gender_mapping = {1: 'Male', 2: 'Female'}
+    return gender_mapping.get(gender, 'Unknown')
 
-    tutorial_data = "sdasath"
-    kcal_data = 3111
-    difficulty_level_data = DifficultyLevel.EASY
-    health_level_data = HealthLevel.MEDIUM
-    meal_type_test = MealType.SUPPER
+def get_activity_label(activity):
+    # Define a mapping between integer values and labels for activity
+    activity_mapping = {
+        1.2: 'Sedentary',
+        1.375: 'Light Exercise',
+        1.55: 'Moderate Exercise',
+        1.725: 'Heavy Exercise',
+        1.9: 'Athlete'
+    }
+    return activity_mapping.get(activity, 'Unknown')
 
-    new_meal = Meal(
-        tutorial=tutorial_data,
-        kcal=kcal_data,
-        difficulty_level=difficulty_level_data,
-        health_level=health_level_data,
-        meal_type=meal_type_test
-    )
+def calculate_bmi(weight, height):
+    bmi_result = (weight/pow(height, 2))*10000
+    bmi_result = round(bmi_result, 1)
+    return bmi_result
 
-    #Meal Type - Supper
+def classify_bmi(bmi_result):
+        # define a mapping between bmi_result and labels for it
+        bmi_mapping = {
+            bmi_result <= 18.5: 'Underweight',
+            18.5 < bmi_result <= 24.99: 'Normal Weight',
+            24.99 < bmi_result <= 29.99: 'Overweight',
+            bmi_result >= 30: 'Obese'
+        }
+        return bmi_mapping.get(True, 'Unknown')
 
-    ThaiShrimpSoup = Meal(
-        tutorial='https://www.eatthismuch.com/recipe/nutrition/easy-thai-shrimp-soup,906963/',
-        kcal=466,
-        difficulty_level=DifficultyLevel.MEDIUM,
-        health_level=HealthLevel.HEALTHY,
-        meal_type=MealType.SUPPER
-    )
+def calculate_calories(weight, height, age, gender, activity):
+    # calculate calories when body fat isn't included
+    n = 0
+    if gender == 1:
+        n = 5
+    elif gender == 2:
+        n = (-161)
+    BMR = 10*weight+6.25*height-5*age+n
+    calories = BMR * activity
+    return calories
 
-    SalmonSalad = Meal(
-        tutorial='https://www.eatthismuch.com/recipe/nutrition/salmon-salad,949284/',
-        kcal=568,
-        difficulty_level=DifficultyLevel.EASY,
-        health_level=HealthLevel.HEALTHY,
-        meal_type=MealType.SUPPER
-    )
+def calculate_calories_bfat(weight, bfat, activity):
+    # calculate calories when body fat is included
+    BMR = 370+21.6*(1-(bfat/100))*weight
+    calories = BMR * activity
+    calories = round(calories, 0)
+    calories = int(calories)
+    return calories
 
-    AppleSliceSandwich = Meal(
-        tutorial='https://www.eatthismuch.com/recipe/nutrition/apple-slice-sandwich,921836/',
-        kcal=442,
-        difficulty_level=DifficultyLevel.EASY,
-        health_level=HealthLevel.MEDIUM,
-        meal_type=MealType.SUPPER
-    )
+def get_meals_by_criteria(max_kcal):
+    selected_meals = {}
 
-    ClassicBLT = Meal(
-        tutorial='https://www.eatthismuch.com/recipe/nutrition/classic-blt,905829//',
-        kcal=914,
-        difficulty_level=DifficultyLevel.EASY,
-        health_level=HealthLevel.MEDIUM,
-        meal_type=MealType.SUPPER
-    )
+    for meal_type in MealType:
+        meal = get_meal_by_criteria(max_kcal, meal_type.value)
+#         print(f"Meal Type: {meal_type.value}, Meal: {meal}") # Debug print
+        selected_meals[meal_type.value] = meal
+#     print(f"Selected Meals: {selected_meals}") # Debug print
+    return selected_meals
 
+def get_meal_by_criteria(max_kcal, meal_type):
+    '''
+    Retrieves a meal based on filter criteria.
+    returns: A random meal matching the criteria or None if no suitable meal is found.
+    '''
+    meals = Meals.query.filter(
+            Meals.kcal <= max_kcal/3,
+            Meals.meal_type == meal_type
+        ).all()
 
+#     print(f"Meals for {meal_type}: {meals}") # Debug print
+    if meals:
+        selected_meal = random.choice(meals)
+#         print(f"2 Selected Meal for {meal_type}: {selected_meal}") # Debug print
+        return selected_meal
+    else:
+#         print(f"2 No suitable meal found for {meal_type}") # Debug print
+        return None
 
+def create_meal_records():
+    with app.app_context():
+        # Clear existing meal records
+        db.session.query(Meals).delete()
 
-    #Meal Type - Breakfast
+        # Add 50 random meal records
+        for _ in range(50):
+            instructions = "Meal Instructions " + str(random.randint(1, 100))
+            kcal = random.uniform(300, 800)
+            meal_type = random.choice(list(MealType))
+            new_meal = Meals(
+                        instructions=instructions,
+                        kcal=kcal,
+                        meal_type=meal_type
+                        )
+            db.session.add(new_meal)
+            db.session.commit()
 
-    CranberryBananaOatmeal = Meal(
-        tutorial='https://www.eatthismuch.com/recipe/nutrition/cranberry-banana-oatmeal,906966/',
-        kcal=355,
-        difficulty_level=DifficultyLevel.EASY,
-        health_level=HealthLevel.HEALTHY,
-        meal_type=MealType.BREAKFAST
-    )
+class User_data(db.Model):
+    '''
+    Database model/entity for representing current user's information.
+    Redundant and could be user differently but doesn't hurt anybody by doing it this way
+    '''
+    id = db.Column(db.Integer, primary_key=True)
+    gender = db.Column(db.Integer, nullable=False)
+    age = db.Column(db.Integer, nullable=False)
+    weight = db.Column(db.Float, nullable=False)
+    height = db.Column(db.Float, nullable=False)
+    activity = db.Column(db.Float)
+    bfat = db.Column(db.Float, nullable=True)
 
-    AlmondButterSmoothie = Meal(
-        tutorial='https://www.eatthismuch.com/recipe/nutrition/almond-butter-smoothie,939598/',
-        kcal=460,
-        difficulty_level=DifficultyLevel.MEDIUM,
-        health_level=HealthLevel.HEALTHY,
-        meal_type=MealType.BREAKFAST
-    )
+class Meals(db.Model):
+    '''
+    Database model/entity for representing meal information.
+    '''
+    id = db.Column(db.Integer, primary_key=True)
+    instructions = db.Column(db.Text, nullable=False)
+    kcal = db.Column(db.Float, nullable=False)
+    meal_type = db.Column(db.Enum(MealType), nullable=False)
 
-    BaconAndCheddarGrilledCheese = Meal(
-        tutorial='https://www.eatthismuch.com/recipe/nutrition/bacon-and-cheddar-grilled-cheese,927340/',
-        kcal=411,
-        difficulty_level=DifficultyLevel.EASY,
-        health_level=HealthLevel.UNHEALTHY,
-        meal_type=MealType.BREAKFAST
-    )
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
 
-    PestoPastaWithGrilledChicken = Meal(
-        tutorial='https://www.eatthismuch.com/recipe/nutrition/pesto-pasta-with-grilled-chicken,3218180/',
-        kcal=852,
-        difficulty_level=DifficultyLevel.MEDIUM,
-        health_level=HealthLevel.MEDIUM,
-        meal_type=MealType.BREAKFAST
-    )
+    create_meal_records()
 
-
-    #Meal Type - Dinner
-
-    GarlicMacNCheese = Meal(
-        tutorial='https://www.eatthismuch.com/recipe/nutrition/garlic-mac-n-cheese,925249/',
-        kcal=587,
-        difficulty_level=DifficultyLevel.MEDIUM,
-        health_level=HealthLevel.UNHEALTHY,
-        meal_type=MealType.DINNER
-    )
-
-    WhiteSphagetti = Meal(
-        tutorial='https://www.eatthismuch.com/recipe/nutrition/white-spaghetti,920498/',
-        kcal=587,
-        difficulty_level=DifficultyLevel.MEDIUM,
-        health_level=HealthLevel.MEDIUM,
-        meal_type=MealType.DINNER
-    )
-
-    BakedParmesanChickenNuggets = Meal(
-        tutorial='https://www.eatthismuch.com/recipe/nutrition/baked-parmesan-chicken-nuggets,3222233/',
-        kcal=1732,
-        difficulty_level=DifficultyLevel.MEDIUM,
-        health_level=HealthLevel.MEDIUM,
-        meal_type=MealType.DINNER
-    )
-
-    MediTerraneanQuinoaSalad = Meal(
-        tutorial='https://www.eatthismuch.com/recipe/nutrition/mediterranean-quinoa-salad,34389/',
-        kcal=532,
-        difficulty_level=DifficultyLevel.MEDIUM,
-        health_level=HealthLevel.HEALTHY,
-        meal_type=MealType.DINNER
-    )
-
-    db.session.add(ThaiShrimpSoup)
-    db.session.add(CranberryBananaOatmeal)
-    db.session.add(WhiteSphagetti)
-    db.session.add(ClassicBLT)
-    db.session.add(SalmonSalad)
-    db.session.add(AppleSliceSandwich)
-    db.session.add(BakedParmesanChickenNuggets)
-    db.session.add(PestoPastaWithGrilledChicken)
-    db.session.add(GarlicMacNCheese)
-    db.session.add(AlmondButterSmoothie)
-    db.session.add(BaconAndCheddarGrilledCheese)
-    db.session.add(MediTerraneanQuinoaSalad)
-    db.session.commit()
-
-    return "Record created successfully!"
-
-# populate_db()
-
-with app.app_context():
-    db.create_all()
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='localhost', port=9874)
