@@ -166,7 +166,7 @@ def get_meal_by_criteria(max_kcal, meal_type):
         return selected_meal
     else:
 #         print(f"2 No suitable meal found for {meal_type}") # Debug print
-        return None
+        return "No meals found"
 
 def create_meal_records():
     with app.app_context():

@@ -17,11 +17,20 @@
 
             {% if selected_meals %}
             <div style="margin-top: 20px;">
-                <h3 class="nice-headline" style="font-size: 20px">Your Recommended Meal:</h3>
+                <h3 class="nice-headline" style="font-size: 20px">Your Recommended Meals:</h3>
                 {% for meal_type, meal in selected_meals.items() %}
-                <h4>{{ meal_type }}</h4>
-                <p>Instructions: {{ meal.instructions }}</p>
-                <p>Kcal: {{ meal.kcal }}</p>
+                    <div class="bordered">
+                        <div style="float: left; width: 50%;">
+                            <h4>{{ meal_type }}</h4>
+                        </div>
+                        <div style="float: left; width: 50%; font-style: italic; font-weight: normal;">
+                            <p>Kcal: {{ "{:.1f}".format(meal.kcal) }}</p>
+                        </div>
+                        <div style="clear: both;"></div>
+                        <div style="width: 100%; font-weight: normal;">
+                            <p><strong>Instructions:</strong> {{ meal.instructions }}</p>
+                        </div>
+                    </div>
                 {% endfor %}
             </div>
             {% endif %}
