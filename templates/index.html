@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>TDEE Calculator</title>
+{% endblock %}
+
+{% block body %}
+<div class="container">
+    <div class="jumbotron">
+        <h2 class="nice-headline">Learn About Your BMI</h2>
+        <div>
+            <form method="post" action="/" onsubmit="return validateForm();">
+                <table>
+                    <tbody><tr>
+                        <td class="col1"><label for="gender">Gender</label></td>
+                        <td>
+                            <select name="gender" class="form-control" id="gender" style="width:110px;">
+                                <option value=1 selected="">Male</option>
+                                <option value=2>Female</option>
+                            </select>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="col1"><label for="age">Age</label></td>
+                        <td>
+                            <input type="text" name="age" class="form-control" id="age" style="width:60px;" maxlength="3" value="">
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="col1"><label for="weight">Weight</label></td>
+                        <td><input type="text" name="weight" class="form-control" id="weight" placeholder="kg" style="width:60px;" maxlength="5"></td>
+                    </tr>
+
+                    <tr>
+                        <td class="col1"><label for="height">Height</label></td>
+                        <td><input type="text" name="height" class="form-control" id="height" placeholder="cm" style="width:60px;" maxlength="3"></td>
+                    </tr>
+
+                    <tr>
+                        <td class="col1"><label for="activity">Activity</label></td>
+                        <td>
+                            <select name="activity" class="form-control" id="activity" style="width:200px;">
+                                <option value=1.2 selected="">Sedentary (office job)</option>
+                                <option value=1.375>Light Exercise (1-2 days/week)</option>
+                                <option value=1.55>Moderate Exercise (3-5 days/week)</option>
+                                <option value=1.725>Heavy Exercise (6-7 days/week)</option>
+                                <option value=1.9>Athlete (2x per day) </option>
+                            </select>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="position:relative;" class="col1"><label for="bodyfat">Body Fat %</label>
+                        <td><input type="text" name="bodyfat" class="form-control" id="bodyfat" style="width:60px;display:inline-block;" maxlength="2" placeholder="15"></td>
+                    </tr>
+
+                    <tr style="margin-top:15px;">
+                        <td class="col1">&nbsp;</td>
+                        <td><input type="submit" class="btn" id="submit" name="submit" value="Calculate"></td>
+                    </tr>
+
+                    </tbody></table>
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

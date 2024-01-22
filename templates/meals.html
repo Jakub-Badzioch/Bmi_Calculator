@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Meal Planner</title>
+{% endblock %}
+
+{% block body %}
+<div class="container">
+    <div class="jumbotron">
+        <h2 class="nice-headline">Create your meal plan in seconds</h2>
+        <div class="maintenance">
+            <form method="POST" action="{{ url_for('meals_route') }}" class="form-control">
+                <label for="max_kcal">Enter your calories: </label>
+                <input type="number" name="max_kcal" id="max_kcal" required>
+                <button type="submit" class="btn" style="margin-top: 15px; margin-left: 30%">Generate</button>
+            </form>
+
+            {% if selected_meals %}
+            <div style="margin-top: 20px;">
+                <h3 class="nice-headline" style="font-size: 20px">Your Recommended Meal:</h3>
+                {% for meal_type, meal in selected_meals.items() %}
+                <h4>{{ meal_type }}</h4>
+                <p>Instructions: {{ meal.instructions }}</p>
+                <p>Kcal: {{ meal.kcal }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
