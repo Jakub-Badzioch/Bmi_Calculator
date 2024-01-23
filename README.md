@@ -13,8 +13,6 @@ based on specified criteria. The application uses SQLite for database storage.
    - Users can input criteria for maximum kcal to find a suitable meal.
    - If a meal is found, it is generated with meal details (Instructions, kcal, meal type) and presented to the user.
 
-3. **Database Population:**
-   - An endpoint `/populate_db` populates the SQLite database with a sample meal records for testing purposes.
 
 ## Project Structure
 
@@ -24,16 +22,14 @@ based on specified criteria. The application uses SQLite for database storage.
 
 ## Usage
 
-1. Access the application in your browser at `http://127.0.0.1:5000/`.
+1. Access the application in your browser at `http://localhost:9874`.
 
 2. Calculate BMI:
    - Enter your weight and height.
    - View the calculated BMI on the result page.
 
 3. Find Suitable Meal:
-   - Navigate to `/meal`.
+   - Navigate to `/meals`.
    - Enter criteria such as max kcal.
    - Receive a report with details of suitable meals or a message indicating no suitable meal was found.
 
-4. Populate Database:
-   - Visit `/populate_db` to add a sample meal records to the database.
