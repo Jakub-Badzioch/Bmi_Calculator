@@ -26,7 +26,7 @@ def index():
         activity = request.form['activity']
         bfat = float(request.form['bodyfat']) if request.form['bodyfat'] else None
 
-        # Creating a new INSERT to the user_data table in the site.db
+        # Creating a new record to the user_data table in the site.db
         new_row = User_data(
             gender=gender,
             age=age,
