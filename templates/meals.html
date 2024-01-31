@@ -29,7 +29,9 @@
                             </div>
                             <div style="clear: both;"></div>
                             <div style="width: 100%; font-weight: normal;">
-                                <p><strong>Instructions:</strong> {{ meal.instructions }}</p>
+                                <p><strong>{{meal.name}}</strong></p>
+                                <p><strong>Instructions:</strong> <a href={{meal.instructions}}>Visit</a></p>
+                                <img src="\static\{{meal.name}}.jpg" alt="test" width="200" height="200"/>
                             </div>
                         {% else %}
                             <div style="float: left; width: 50%; font-style: italic; font-weight: normal;">

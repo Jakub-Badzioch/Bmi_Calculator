@@ -168,17 +168,34 @@ def get_meal_by_criteria(max_kcal, meal_type):
 #         print(f"2 No suitable meal found for {meal_type}") # Debug print
         return None
 
+
+meals_details = [["Scrambled Eggs", "https://www.bbcgoodfood.com/recipes/perfect-scrambled-eggs-recipe", 405, MealType.BREAKFAST],
+                 ["Avocado Toast", "https://cookieandkate.com/avocado-toast-recipe/", 330, MealType.BREAKFAST],
+                 ["English Breakfast", 'https://iamafoodblog.com/a-breakdown-of-the-full-english-breakfast/', 780, MealType.BREAKFAST],
+                 ["Fried Chicken", "https://cooking.nytimes.com/guides/25-how-to-make-fried-chicken", 600, MealType.DINNER],
+                 ["Sphagetti Bolognese", "https://www.bbcgoodfood.com/recipes/best-spaghetti-bolognese-recipe", 550, MealType.DINNER],
+                 ["Sushi", "https://www.justonecookbook.com/ultimate-sushi-guide/", 400, MealType.DINNER],
+                 ["Curry", "https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&ved=2ahUKEwjqjMj3n4eEAxUpVPEDHYD1CDMQFnoECBgQAQ&url=https%3A%2F%2Fcurryculture.co.uk%2Ftypes-of-curry%2F&usg=AOvVaw0H8_y_U8V5lvOUE3uTnUa5&opi=89978449", 630, MealType.DINNER],
+                 ["Salmon salad", "https://www.wyseguide.com/roasted-vegetable-salmon-salad/", 340, MealType.SUPPER],
+                 ["Cereal", "https://www.allrecipes.com/recipe/44162/homemade-cereal/", 440, MealType.SUPPER],
+                 ["Prawn Soup", "https://en.wikipedia.org/wiki/Prawn_soup", 470, MealType.SUPPER]
+                 ]
+
+
+
 def create_meal_records():
     with app.app_context():
         # Clear existing meal records
         db.session.query(Meals).delete()
 
         # Add 50 random meal records
-        for _ in range(50):
-            instructions = "Meal Instructions " + str(random.randint(1, 100))
-            kcal = random.uniform(300, 800)
-            meal_type = random.choice(list(MealType))
+        for _ in range(len(meals_details)):
+            name = meals_details[_][0]
+            instructions = meals_details[_][1]
+            kcal = meals_details[_][2]
+            meal_type = meals_details[_][3]
             new_meal = Meals(
+                        name=name,
                         instructions=instructions,
                         kcal=kcal,
                         meal_type=meal_type
@@ -204,6 +221,7 @@ class Meals(db.Model):
     Database model/entity for representing meal information.
     '''
     id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, nullable=False)
     instructions = db.Column(db.Text, nullable=False)
     kcal = db.Column(db.Float, nullable=False)
     meal_type = db.Column(db.Enum(MealType), nullable=False)
@@ -211,7 +229,6 @@ class Meals(db.Model):
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
-
     create_meal_records()
 
     app.run(debug=True, host='localhost', port=9874)
