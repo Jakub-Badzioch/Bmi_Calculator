@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 import math
 import random
 
-#Test
+#Test pull requests
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
